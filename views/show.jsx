@@ -3,9 +3,11 @@ const Default = require("./layouts/Default");
 
 function Show({ bread }) {
   console.log({ bread });
+  console.log(bread.baker);
   return (
     <Default>
       <h3>{bread.name}</h3>
+
       <p>
         and it
         {bread.hasGluten ? <span> does </span> : <span> does NOT </span>}
@@ -13,7 +15,7 @@ function Show({ bread }) {
       </p>
 
       <img src={bread.image} alt={bread.name} />
-      <p>Baked by {bread.getBakedBy()}</p>
+      <p>Baked by {bread.baker ? bread.getBakedBy() : "Russ"}</p>
       <a href={`/breads/${bread.id}/edit`}>
         <button>Edit</button>
       </a>

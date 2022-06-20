@@ -1,40 +1,55 @@
 const express = require("express");
 const breads = express.Router();
 const Bread = require("../models/bread.js");
+// somewhere at the top with the other dependencies
+const Baker = require("../models/baker.js");
 
 // Index
-breads.get("/", (req, res) => {
-  Bread.find().then((foundBreads) => {
-    res.render("index", {
-      breads: foundBreads,
-      title: "Index Page",
+// Index:
+
+breads.get("/", async (req, res) => {
+  const foundBakers = await Baker.find().lean();
+  const foundBreads = await Bread.find().limit(5).lean();
+  res.render("index", {
+    breads: foundBreads,
+    bakers: foundBakers,
+    title: "Index Page",
+  });
+});
+
+// in the new route
+breads.get("/new", (req, res) => {
+  Baker.find().then((foundBakers) => {
+    res.render("new", {
+      bakers: foundBakers,
     });
   });
 });
 
-// NEW
-breads.get("/new", (req, res) => {
-  res.render("new");
-});
-
 // EDIT
 breads.get("/:id/edit", (req, res) => {
-  Bread.findById(req.params.id).then((foundBread) => {
-    res.render("edit", {
-      bread: foundBread,
+  Baker.find().then((foundBakers) => {
+    Bread.findById(req.params.id).then((foundBread) => {
+      res.render("edit", {
+        bread: foundBread,
+        bakers: foundBakers,
+      });
     });
   });
 });
 
 // SHOW
 breads.get("/:id", (req, res) => {
-  Bread.findById(req.params.id).then((foundBread) => {
-    const bakedBy = foundBread.getBakedBy();
-    console.log(bakedBy);
-    res.render("show", {
-      bread: foundBread,
+  Bread.findById(req.params.id)
+    .populate("baker")
+    .then((foundBread) => {
+      res.render("show", {
+        bread: foundBread,
+      });
+    })
+    .catch((err) => {
+      res.send("404");
     });
-  });
 });
 
 // CREATE
@@ -48,8 +63,14 @@ breads.post("/", (req, res) => {
   } else {
     req.body.hasGluten = false;
   }
-  Bread.create(req.body);
-  res.redirect("/breads");
+  Bread.create(req.body)
+    .then((showIndex) => {
+      console.log(showIndex);
+      res.redirect("/breads");
+    })
+    .catch(() => {
+      res.send("not a valid baker");
+    });
 });
 
 // DELETE
